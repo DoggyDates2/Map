@@ -201,9 +201,9 @@ def main():
                 lon=category_data['Longitude'],
                 mode='markers',
                 marker=dict(
-                    size=12,  # Larger markers
+                    size=14,  # Even larger markers for better visibility on clean background
                     color=color_map[category],
-                    opacity=0.9
+                    opacity=0.95  # Higher opacity against clean background
                 ),
                 text=category_data['hover_text'],
                 hovertemplate='%{text}<extra></extra>',
@@ -214,7 +214,7 @@ def main():
         # Update map layout
         fig.update_layout(
             mapbox=dict(
-                style="open-street-map",
+                style="carto-positron",  # Clean black and white style
                 center=dict(
                     lat=display_df['Latitude'].mean(),
                     lon=display_df['Longitude'].mean()
@@ -230,8 +230,8 @@ def main():
                 y=1,
                 xanchor="left",
                 x=1.02,
-                bgcolor="rgba(255,255,255,0.8)",
-                bordercolor="rgba(0,0,0,0.2)",
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="rgba(0,0,0,0.3)",
                 borderwidth=1
             )
         )

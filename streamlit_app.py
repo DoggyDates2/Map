@@ -83,16 +83,31 @@ def load_sheet_data():
         return pd.DataFrame(), None
 
 def generate_colors(unique_values, base_hue=0):
-    """Generate distinct colors for different categories"""
-    colors = []
-    n = len(unique_values)
+    """Generate distinct, vibrant colors for different categories"""
+    # Predefined vibrant colors for better visibility
+    vibrant_colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
+        '#DDA0DD', '#98D8C8', '#FFD93D', '#6C5CE7', '#A29BFE',
+        '#FD79A8', '#FDCB6E', '#6C5CE7', '#00B894', '#E17055',
+        '#81ECEC', '#FF7675', '#74B9FF', '#00CEC9', '#FDCB6E',
+        '#E84393', '#00B894', '#0984E3', '#6C5CE7', '#FD79A8',
+        '#FDCB6E', '#55A3FF', '#FF6348', '#26DE81', '#FC427B',
+        '#FD79A8', '#FDCB6E', '#55A3FF', '#FF6348', '#26DE81',
+        '#FF9F43', '#70A1FF', '#5352ED', '#FF3838', '#2ED573',
+        '#1E90FF', '#FF6B35', '#F7931E', '#FFD23F', '#EE5A24',
+        '#009432', '#006BA6', '#0582CA', '#00A8CC', '#F18F01'
+    ]
+    
+    colors = {}
     for i, value in enumerate(unique_values):
-        # Use golden ratio to distribute hues evenly
-        hue = (base_hue + (i * 137.508)) % 360  # 137.508 is golden angle
-        saturation = 70 + (i % 3) * 10  # Vary saturation slightly
-        lightness = 50 + (i % 2) * 20   # Vary lightness
-        colors.append(f"hsl({hue:.0f}, {saturation}%, {lightness}%)")
-    return dict(zip(unique_values, colors))
+        if i < len(vibrant_colors):
+            colors[value] = vibrant_colors[i]
+        else:
+            # Fallback to generated colors for more than 50 categories
+            hue = (base_hue + (i * 137.508)) % 360
+            colors[value] = f"hsl({hue:.0f}, 85%, 55%)"
+    
+    return colors
 
 def update_sheet_cell(worksheet, row_idx, col_name, new_value, df):
     """Update a single cell in the Google Sheet"""
@@ -186,8 +201,11 @@ def main():
                 lon=category_data['Longitude'],
                 mode='markers',
                 marker=dict(
-                    size=10,
+                    size=15,  # Larger markers
                     color=color_map[category],
+                    opacity=0.8,
+                    sizemode='diameter',
+                    line=dict(width=2, color='white')  # White border for better visibility
                 ),
                 text=category_data['hover_text'],
                 hovertemplate='%{text}<extra></extra>',
@@ -203,11 +221,21 @@ def main():
                     lat=display_df['Latitude'].mean(),
                     lon=display_df['Longitude'].mean()
                 ),
-                zoom=10
+                zoom=11  # Slightly zoomed in for better detail
             ),
-            height=600,
+            height=700,  # Taller map for better visibility
             margin=dict(l=0, r=0, t=0, b=0),
-            showlegend=True
+            showlegend=True,
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02,
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="rgba(0,0,0,0.2)",
+                borderwidth=1
+            )
         )
         
         # Display the map

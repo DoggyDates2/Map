@@ -201,11 +201,9 @@ def main():
                 lon=category_data['Longitude'],
                 mode='markers',
                 marker=dict(
-                    size=15,  # Larger markers
+                    size=12,  # Larger markers
                     color=color_map[category],
-                    opacity=0.8,
-                    sizemode='diameter',
-                    line=dict(width=2, color='white')  # White border for better visibility
+                    opacity=0.9
                 ),
                 text=category_data['hover_text'],
                 hovertemplate='%{text}<extra></extra>',

@@ -35,26 +35,46 @@ def load_sheet_data():
         sheet = gc.open_by_key(SHEET_ID)
         worksheet = sheet.worksheet(WORKSHEET_NAME)
         
-        # Get all records
-        records = worksheet.get_all_records()
-        df = pd.DataFrame(records)
+        # Get data using values method to avoid header issues
+        all_values = worksheet.get_all_values()
+        
+        # Define expected headers (based on your sheet structure)
+        expected_headers = ['Address', 'Dog Name', 'District', 'Latitude', 'Longitude', 
+                          'Number of dogs', 'Filter', 'Today', 'Group', 'Dog ID', 'New Assignment']
+        
+        if len(all_values) > 0:
+            # Use only the columns we need (A through K)
+            headers = all_values[0][:len(expected_headers)]
+            data_rows = [row[:len(expected_headers)] for row in all_values[1:]]
+            
+            # Create DataFrame with expected headers
+            df = pd.DataFrame(data_rows, columns=expected_headers)
+        else:
+            df = pd.DataFrame(columns=expected_headers)
         
         # Clean and process data
         if not df.empty:
-            # Ensure proper column names (adjust based on your actual column structure)
-            expected_columns = ['Address', 'Dog Name', 'District', 'Latitude', 'Longitude', 
-                              'Number of dogs', 'Filter', 'Today', 'Group', 'Dog ID', 'New Assignment']
+            # Remove completely empty rows
+            df = df[df['Address'].astype(str).str.strip() != '']
             
             # Filter out rows with missing coordinates
-            df = df[(df['Latitude'] != '') & (df['Longitude'] != '') & 
-                   (df['Latitude'] != 0) & (df['Longitude'] != 0)]
+            df = df[(df['Latitude'].astype(str).str.strip() != '') & 
+                   (df['Longitude'].astype(str).str.strip() != '') & 
+                   (df['Latitude'].astype(str) != '0') & 
+                   (df['Longitude'].astype(str) != '0')]
             
             # Convert coordinates to numeric
             df['Latitude'] = pd.to_numeric(df['Latitude'], errors='coerce')
             df['Longitude'] = pd.to_numeric(df['Longitude'], errors='coerce')
             
+            # Convert Number of dogs to numeric, default to 1
+            df['Number of dogs'] = pd.to_numeric(df['Number of dogs'], errors='coerce').fillna(1)
+            
             # Remove rows with invalid coordinates
             df = df.dropna(subset=['Latitude', 'Longitude'])
+            
+            # Fill empty strings with appropriate defaults
+            df = df.fillna('')
             
         return df, worksheet
         
@@ -77,7 +97,7 @@ def generate_colors(unique_values, base_hue=0):
 def update_sheet_cell(worksheet, row_idx, col_name, new_value, df):
     """Update a single cell in the Google Sheet"""
     try:
-        # Find column index (Google Sheets is 1-indexed, and has header row)
+        # Column mapping for A through K
         col_map = {
             'Address': 1, 'Dog Name': 2, 'District': 3, 'Latitude': 4, 'Longitude': 5,
             'Number of dogs': 6, 'Filter': 7, 'Today': 8, 'Group': 9, 'Dog ID': 10, 'New Assignment': 11
@@ -85,8 +105,10 @@ def update_sheet_cell(worksheet, row_idx, col_name, new_value, df):
         
         if col_name in col_map:
             col_idx = col_map[col_name]
-            # Add 2 to row_idx: 1 for header row, 1 for 1-indexing
-            worksheet.update_cell(row_idx + 2, col_idx, new_value)
+            # Add 2 to row_idx: 1 for header row, 1 for 0-based to 1-based indexing
+            # But we need to account for the original row position in the sheet
+            sheet_row = row_idx + 2  # row_idx is 0-based from our filtered DataFrame
+            worksheet.update_cell(sheet_row, col_idx, new_value)
             return True
         return False
         

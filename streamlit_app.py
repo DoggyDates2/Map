@@ -214,7 +214,7 @@ def main():
         # Update map layout
         fig.update_layout(
             mapbox=dict(
-                style="stamen-toner",  # Black & white with street names, no colors
+                style="carto-positron",  # Light clean style with street names
                 center=dict(
                     lat=display_df['Latitude'].mean(),
                     lon=display_df['Longitude'].mean()
